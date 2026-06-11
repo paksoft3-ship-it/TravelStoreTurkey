@@ -13,17 +13,20 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function FleetPage() {
-    const vehicles = await prisma.vehicle.findMany({
-        where: {
-            status: {
-                not: 'RETIRED',
+    // Fall back to an empty fleet if the database is unavailable (demo / no DB).
+    const vehicles = await prisma.vehicle
+        .findMany({
+            where: {
+                status: {
+                    not: 'RETIRED',
+                },
+                // prioritizing vehicles with images if we had them, but for now just fetching all
             },
-            // prioritizing vehicles with images if we had them, but for now just fetching all
-        },
-        orderBy: {
-            type: 'asc',
-        },
-    });
+            orderBy: {
+                type: 'asc',
+            },
+        })
+        .catch(() => [] as Awaited<ReturnType<typeof prisma.vehicle.findMany>>);
 
     // Group by type to show unique classes
     // actually, let's just show unique Make/Models to avoid duplicates if we have 5 identical cars

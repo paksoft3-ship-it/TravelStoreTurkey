@@ -1,0 +1,21 @@
+{
+  "name": "PrimeTaxi & Tours",
+  "short_name": "PrimeTaxi",
+  "description": "Premium private transportation and tours in Iceland",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f8f5",
+  "theme_color": "#f2cc0d",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

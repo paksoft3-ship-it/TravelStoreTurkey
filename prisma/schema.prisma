@@ -1,0 +1,271 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for admin authentication
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  role          Role      @default(ADMIN)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  bookings      Booking[] @relation("CreatedByUser")
+}
+
+enum Role {
+  ADMIN
+  SUPER_ADMIN
+  DRIVER
+}
+
+// Driver model
+model Driver {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  phone        String
+  licenseNumber String
+  status       DriverStatus @default(OFFLINE)
+  image        String?
+  vehicle      Vehicle?  @relation(fields: [vehicleId], references: [id])
+  vehicleId    String?   @unique
+  rating       Float     @default(5.0)
+  totalTrips   Int       @default(0)
+  bookings     Booking[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+enum DriverStatus {
+  AVAILABLE
+  ON_TOUR
+  OFFLINE
+  BREAK
+}
+
+// Vehicle/Fleet model
+model Vehicle {
+  id            String      @id @default(cuid())
+  make          String
+  model         String
+  year          Int
+  licensePlate  String      @unique
+  type          VehicleType
+  capacity      Int
+  features      String[]
+  image         String?
+  status        VehicleStatus @default(AVAILABLE)
+  driver        Driver?
+  bookings      Booking[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+enum VehicleType {
+  SEDAN
+  SUV
+  VAN
+  LUXURY
+  MINIBUS
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  RETIRED
+}
+
+// Tour model
+model Tour {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String    @db.Text
+  shortDescription String
+  duration    String
+  durationHours Int
+  price            Float
+  largeGroupPrice  Float  @default(0)
+  currency    String    @default("ISK")
+  category    TourCategory
+  highlights  String[]
+  includes    String[]
+  images      String[]
+  featured    Boolean   @default(false)
+  active      Boolean   @default(true)
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum TourCategory {
+  FULL_DAY
+  HALF_DAY
+  EVENING
+  MULTI_DAY
+  TRANSFER
+}
+
+// Booking model
+model Booking {
+  id              String        @id @default(cuid())
+  bookingNumber   String        @unique
+  type            BookingType
+  status          BookingStatus @default(PENDING)
+
+  // Customer details
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  passengers      Int           @default(1)
+  specialRequests String?       @db.Text
+
+  // Booking details
+  pickupLocation  String
+  dropoffLocation String?
+  pickupDate      DateTime
+  pickupTime      String
+
+  // Pricing
+  basePrice       Float
+  extras          Float         @default(0)
+  discount        Float         @default(0)
+  totalPrice      Float
+  currency        String        @default("ISK")
+
+  // Payment
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentIntentId String?
+  paidAt          DateTime?
+
+  // Relations
+  tour            Tour?         @relation(fields: [tourId], references: [id])
+  tourId          String?
+  driver          Driver?       @relation(fields: [driverId], references: [id])
+  driverId        String?
+  vehicle         Vehicle?      @relation(fields: [vehicleId], references: [id])
+  vehicleId       String?
+  createdBy       User?         @relation("CreatedByUser", fields: [createdById], references: [id])
+  createdById     String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum BookingType {
+  TAXI
+  AIRPORT_TRANSFER
+  PRIVATE_TOUR
+  CUSTOM_TOUR
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+  FAILED
+}
+
+// Contact form submissions
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// Newsletter subscribers
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model BlogPost {
+  id            String     @id @default(cuid())
+  title         String
+  slug          String     @unique
+  excerpt       String
+  content       String     @db.Text
+  featuredImage String?
+  category      String     @default("general")
+  status        BlogStatus @default(DRAFT)
+  views         Int        @default(0)
+  author        String     @default("Admin")
+  publishedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model TransferRoute {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   // PRIVATE_TRANSFER | BLUE_LAGOON | AIRPORT_BLUE_LAGOON | AIRPORT
+  from        String?
+  to          String?
+  description String?
+  duration    String?
+  distance    String?
+  passengers  String?
+  price            Float
+  largeGroupPrice  Float    @default(0)
+  features         String[]
+  popular          Boolean  @default(false)
+  active           Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Page {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String   @db.Text
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}

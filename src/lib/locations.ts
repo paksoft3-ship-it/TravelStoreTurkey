@@ -1,0 +1,15 @@
+export const POPULAR_LOCATIONS = [
+    'Istanbul Airport (IST)',
+    'Sabiha Gökçen Airport (SAW)',
+    'Sultanahmet, Istanbul',
+    'Taksim Square, Istanbul',
+    'Grand Bazaar, Istanbul',
+    'Galata Tower, Istanbul',
+    'Kadıköy, Istanbul',
+    'Cappadocia (Göreme)',
+    'Nevşehir Airport (NAV)',
+    'Antalya Airport (AYT)',
+    'Izmir Airport (ADB)',
+    'Pamukkale',
+    'Kuşadası',
+];
